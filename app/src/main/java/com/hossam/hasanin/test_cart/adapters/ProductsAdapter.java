@@ -1,5 +1,8 @@
 package com.hossam.hasanin.test_cart.adapters;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,13 +27,11 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
 
 
 
-    private final UpdateItemNumListener listener;
 
-    public ProductsAdapter(List<Product> products, StorePriceChanged storeChanged, int storePos, UpdateItemNumListener listener) {
+    public ProductsAdapter(List<Product> products, StorePriceChanged storeChanged, int storePos) {
         this.products = products;
         this.storeChanged = storeChanged;
         this.storePos = storePos;
-        this.listener = listener;
     }
 
     @NonNull
@@ -42,7 +43,7 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull ProductsAdapter.ViewHolder holder, final int position) {
-        final Product product = products.get(position);
+        Product product = products.get(position);
         holder.tvProductName.setText(product.getTitle());
         holder.tvPrice.setText(String.valueOf(product.getPrice()));
         holder.tvItemCount.setText(String.valueOf(product.getItemCount()));
@@ -54,9 +55,8 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
                 int itemCount = product.getItemCount();
                 itemCount += 1;
                 product.setItemCount(itemCount);
-                products.set(position , product);
-                listener.updateItemNum(product);
-                storeChanged.priceChanged(products , storePos);
+
+                storeChanged.priceChanged(storePos , position);
             }
         });
 
@@ -64,14 +64,27 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
             @Override
             public void onClick(View view) {
                 int itemCount = product.getItemCount();
-                if (itemCount == 1) return;
-                itemCount -= 1;
-                product.setItemCount(itemCount);
-                products.set(position , product);
-                listener.updateItemNum(product);
-                storeChanged.priceChanged(products , storePos);
+                if (itemCount == 1) {
+                    showWantToRemoveDialog(holder.itemView.getContext() , position);
+                } else {
+                    itemCount -= 1;
+                    product.setItemCount(itemCount);
+                    storeChanged.priceChanged(storePos , position);
+                }
             }
         });
+    }
+
+    private void showWantToRemoveDialog(Context context , int pos){
+        AlertDialog.Builder dialog = new AlertDialog.Builder(context)
+                .setMessage("Are you sure you want to remove this item ?")
+                .setPositiveButton("Yes", (dialogInterface, i) -> {
+                    storeChanged.removeProduct(pos , storePos);
+                    dialogInterface.dismiss();
+                }).setNegativeButton("No" , (dialogInterface, i) -> {
+                    dialogInterface.dismiss();
+                });
+        dialog.show();
     }
 
     @Override

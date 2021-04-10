@@ -21,4 +21,11 @@ public class FirebaseDataSource implements MainDataSource {
 
         return query.update("itemCount" , product.getItemCount());
     }
+
+    @Override
+    public Task<Void> removeProduct(Product product) {
+        DocumentReference query = firestore.collection("carts").document(product.getId());
+
+        return query.delete();
+    }
 }

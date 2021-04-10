@@ -8,11 +8,15 @@ public class ViewState {
     private Boolean loading;
     private String error;
     private List<Store> stores;
+    private int totalItemCount;
+    private double totalPrice;
 
-    public ViewState(Boolean loading, String error, List<Store> stores) {
+    public ViewState(Boolean loading, String error, List<Store> stores, int totalItemCount, double totalPrice) {
         this.loading = loading;
         this.error = error;
         this.stores = stores;
+        this.totalItemCount = totalItemCount;
+        this.totalPrice = totalPrice;
     }
 
     public Boolean getLoading() {
@@ -39,7 +43,24 @@ public class ViewState {
         this.stores = stores;
     }
 
-    ViewState copy(List<Store> stores , Boolean loading , String error){
+
+    public int getTotalItemCount() {
+        return totalItemCount;
+    }
+
+    public void setTotalItemCount(int totalItemCount) {
+        this.totalItemCount = totalItemCount;
+    }
+
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    ViewState copy(List<Store> stores , Boolean loading , String error , Integer totalItemCount, Double totalPrice){
         List<Store> _stores = this.stores;
         if (stores != null){
             _stores = stores;
@@ -53,6 +74,16 @@ public class ViewState {
         if (error != null){
             _error = error;
         }
-        return new ViewState(_loading , _error , _stores);
+
+        int _totalItemCount = this.totalItemCount;
+        if (totalItemCount != null){
+            _totalItemCount = totalItemCount;
+        }
+
+        double _totalPrice = this.totalPrice;
+        if (totalPrice != null){
+            _totalPrice = totalPrice;
+        }
+        return new ViewState(_loading , _error , _stores, _totalItemCount, _totalPrice);
     }
 }

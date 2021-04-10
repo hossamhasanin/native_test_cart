@@ -1,6 +1,7 @@
 package com.hossam.hasanin.test_cart.adapters;
 
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +40,7 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull StoresAdapter.ViewHolder holder, int position) {
         Store store = stores.get(position);
-        ProductsAdapter productsAdapter = new ProductsAdapter(store.getProducts(), this, position, listener);
+        ProductsAdapter productsAdapter = new ProductsAdapter(store.getProducts(), this, position);
         holder.storeName.setText(store.getStoreName());
         Glide.with(holder.itemView.getContext()).load(Uri.parse(store.getStoreImage())).into(holder.storeImage);
         holder.productsRec.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
@@ -47,9 +48,10 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
         holder.productsRec.setHasFixedSize(true);
         holder.productsRec.setNestedScrollingEnabled(false);
 
-        double price = calcPrice(productsAdapter.getProducts());
+//        double price = calcPrice(productsAdapter.getProducts());
 
-        holder.tvPrice.setText(String.valueOf(price));
+        holder.tvPrice.setText(String.valueOf(store.getTotalPrice()));
+        holder.tvItemsCount.setText(String.valueOf(store.getTotalItemCount()));
     }
 
     private double calcPrice(List<Product> products){
@@ -60,15 +62,61 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
         return price;
     }
 
+    private int calcItemCount(List<Product> products){
+        int items = 0;
+        for (Product product: products) {
+            items += product.getItemCount();
+        }
+        return items;
+    }
+
     @Override
     public int getItemCount() {
         return stores.size();
     }
 
     @Override
-    public void priceChanged(List<Product> products, int storePos) {
-        stores.get(storePos).setProducts(products);
-        notifyDataSetChanged();
+    public void priceChanged(int storePos , int productPos) {
+        Store store = stores.get(storePos);
+
+        int itemCount = calcItemCount(store.getProducts());
+        double totalPrice = calcPrice(store.getProducts());
+
+        store.setTotalItemCount(itemCount);
+        store.setTotalPrice(totalPrice);
+
+        Log.v("koko" , "store count "+ store.getTotalItemCount());
+        Log.v("koko" , "store price "+ store.getTotalPrice());
+
+        listener.updateItemNum(store.getProducts().get(productPos) , stores);
+
+        notifyItemChanged(storePos);
+
+    }
+
+    @Override
+    public void removeProduct(int productPos, int storePos) {
+        List<Product> products = stores.get(storePos).getProducts();
+        Product product = products.get(productPos);
+        products.remove(productPos);
+//        stores.get(storePos).setProducts(products);
+
+        if (products.isEmpty()){
+            stores.remove(storePos);
+            notifyItemRemoved(storePos);
+        } else {
+            int itemCount = calcItemCount(products);
+            double totalPrice = calcPrice(products);
+
+            stores.get(storePos).setTotalPrice(totalPrice);
+            stores.get(storePos).setTotalItemCount(itemCount);
+            notifyItemChanged(storePos);
+
+        }
+
+
+
+        listener.removeProduct(product , stores);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder{
@@ -77,7 +125,7 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
         TextView storeName;
         RecyclerView productsRec;
         TextView tvPrice;
-        TextView tvDate;
+        TextView tvItemsCount;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -85,7 +133,7 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
             this.storeImage = itemView.findViewById(R.id.store_im);
             this.productsRec = itemView.findViewById(R.id.products_rec);
             this.tvPrice = itemView.findViewById(R.id.tv_price);
-            this.tvDate = itemView.findViewById(R.id.tv_created_at);
+            this.tvItemsCount = itemView.findViewById(R.id.tv_items_count);
         }
     }
 

@@ -7,5 +7,5 @@ import com.hossam.hasanin.test_cart.models.Product;
 public interface MainDataSource {
     Task<QuerySnapshot> getAllProducts();
     Task<Void> updateProduct(Product product);
-
+    Task<Void> removeProduct(Product product);
 }

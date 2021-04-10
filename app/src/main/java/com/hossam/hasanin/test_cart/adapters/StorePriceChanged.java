@@ -5,5 +5,6 @@ import com.hossam.hasanin.test_cart.models.Product;
 import java.util.List;
 
 public interface StorePriceChanged{
-    void priceChanged(List<Product> products , int pos);
+    void priceChanged(int storePos , int productPos);
+    void removeProduct(int productPos , int storePos);
 }
