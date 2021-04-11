@@ -12,4 +12,6 @@ public interface MainDataSource {
     Task<Void> updateProduct(Product product);
     Task<Void> removeProduct(Product product);
     Task<Void> deleteCart(List<Store> stores);
+    Task<Void> addProduct(Product product);
+
 }

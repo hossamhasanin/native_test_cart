@@ -2,6 +2,7 @@ package com.hossam.hasanin.test_cart;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -55,29 +56,21 @@ public class MainActivity extends AppCompatActivity implements UpdateItemNumList
 
         viewModel = new ViewModelProvider(this).get(CartViewModel.class);
 
-        final ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        MainApplication application = (MainApplication) getApplication();
 
-        NetworkRequest.Builder builder = new NetworkRequest.Builder();
+        viewModel.previousConnectionStatus = viewModel.getIsConnected().getValue();
+        viewModel.setIsConnected(application.isConnected);
 
-        NetworkRequest networkRequest = builder.build();
-        connectivityManager.registerNetworkCallback(networkRequest , new ConnectivityManager.NetworkCallback(){
-            @Override
-            public void onAvailable(@NonNull Network network) {
-                super.onAvailable(network);
-                if (!viewModel.isConnected.getValue()) {
+        viewModel.getIsConnected().observe(this, isConnected -> {
+            if (isConnected){
+                if (!viewModel.previousConnectionStatus) {
                     Toast.makeText(getBaseContext(), "Internet connected ", Toast.LENGTH_SHORT).show();
-                    viewModel.isConnected.postValue(true);
-                    if (viewModel.viewstate.getValue().getStores().isEmpty()){
-                        viewModel.getProducts();
-                    }
+                    viewModel.previousConnectionStatus = true;
+                    viewModel.getProducts();
                 }
-            }
-
-            @Override
-            public void onLost(@NonNull Network network) {
-                super.onLost(network);
-                viewModel.isConnected.postValue(false);
+            } else {
                 Toast.makeText(getBaseContext() , "Internet lost " , Toast.LENGTH_SHORT).show();
+                viewModel.previousConnectionStatus = false;
             }
         });
 
@@ -110,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements UpdateItemNumList
                 if (tvMessage.getVisibility() == View.VISIBLE){
                     tvMessage.setVisibility(View.GONE);
                 }
-                StoresAdapter adapter = new StoresAdapter(viewState.getStores(), listener, viewModel.isConnected);
+                StoresAdapter adapter = new StoresAdapter(viewState.getStores(), listener, viewModel.getIsConnected());
                 recStores.setLayoutManager(new LinearLayoutManager(getBaseContext()));
                 recStores.setAdapter(adapter);
             }
@@ -120,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements UpdateItemNumList
 
 
         btDelete.setOnClickListener(view -> {
-            showWantToRemoveDialog(getBaseContext());
+            showWantToRemoveDialog(view.getContext());
         });
     }
 

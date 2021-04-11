@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,12 +25,12 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
     private final List<Product> products;
     private final StorePriceChanged storeChanged;
     private int storePos;
-    private MutableLiveData<Boolean> isConnected;
+    private LiveData<Boolean> isConnected;
 
 
 
 
-    public ProductsAdapter(List<Product> products, StorePriceChanged storeChanged, int storePos, MutableLiveData<Boolean> isConnected) {
+    public ProductsAdapter(List<Product> products, StorePriceChanged storeChanged, int storePos, LiveData<Boolean> isConnected) {
         this.products = products;
         this.storeChanged = storeChanged;
         this.storePos = storePos;

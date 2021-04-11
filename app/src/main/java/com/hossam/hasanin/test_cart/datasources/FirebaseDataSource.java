@@ -49,4 +49,11 @@ public class FirebaseDataSource implements MainDataSource {
             return null;
         });
     }
+
+    @Override
+    public Task<Void> addProduct(Product product) {
+        DocumentReference query = firestore.collection("carts").document(product.getProductId());
+
+        return query.set(product.toMap());
+    }
 }

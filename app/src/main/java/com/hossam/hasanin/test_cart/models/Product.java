@@ -1,5 +1,8 @@
 package com.hossam.hasanin.test_cart.models;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Product {
     private String productId;
     private String productName;
@@ -53,5 +56,17 @@ public class Product {
 
     public void setProductQuantity(int productQuantity) {
         this.productQuantity = productQuantity;
+    }
+
+    public Map<String , Object> toMap(){
+        return new HashMap<String , Object>(){
+            {
+                put("productId" , productId);
+                put("productName" , productName);
+                put("productImage" , productImage);
+                put("productPrice" , productPrice);
+                put("productQuantity" , productQuantity);
+            }
+        };
     }
 }

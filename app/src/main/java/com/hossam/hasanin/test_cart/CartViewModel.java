@@ -26,29 +26,16 @@ public class CartViewModel extends ViewModel {
     private MainDataSource dataSource;
     private MutableLiveData<ViewState> _viewstate = new MutableLiveData();
     LiveData<ViewState> viewstate = _viewstate;
-    MutableLiveData<Boolean> isConnected = new MutableLiveData(true);
-
+    private LiveData<Boolean> isConnected = new MutableLiveData(true);
+    Boolean previousConnectionStatus = true;
 
 
     public CartViewModel(){
         dataSource = new FirebaseDataSource();
-
-        try{
-            Boolean isConnected = isConnected();
-            this.isConnected.postValue(isConnected);
-            _viewstate.postValue(new ViewState(isConnected , isConnected ? "" : "No internet connection available" , new ArrayList<Store>(), 0, 0));
-
-            if (isConnected){
-                getProducts();
-            }
-
-        }catch ( InterruptedException | IOException e){
-            Log.e("CartViewModel" , e.getMessage());
-        }
-
     }
 
     public void getProducts(){
+        _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<Store>(), true, "" , null , null));
         dataSource.getAllProducts().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -117,8 +104,19 @@ public class CartViewModel extends ViewModel {
         _viewstate.postValue(_viewstate.getValue().copy(null , null , null , itemCount , totalPrice));
     }
 
-    private boolean isConnected() throws InterruptedException, IOException {
-        String command = "ping -c 1 google.com";
-        return Runtime.getRuntime().exec(command).waitFor() == 0;
+    public void setIsConnected(MutableLiveData<Boolean> isConnected) {
+        this.isConnected = isConnected;
+        _viewstate.postValue(new ViewState(isConnected.getValue() , isConnected.getValue() ? "" : "No Internet connection"  , new ArrayList<Store>(), 0, 0));
+//        _viewstate.postValue(_viewstate.getValue().copy(null , isConnected.getValue() , isConnected.getValue() ? "" : "No Internet connection" , null , null));
+
     }
+
+    public LiveData<Boolean> getIsConnected() {
+        return isConnected;
+    }
+
+    //    private boolean isConnected() throws InterruptedException, IOException {
+//        String command = "ping -c 1 google.com";
+//        return Runtime.getRuntime().exec(command).waitFor() == 0;
+//    }
 }

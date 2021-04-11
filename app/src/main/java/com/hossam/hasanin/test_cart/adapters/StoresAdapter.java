@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,9 +25,9 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder> implements StorePriceChanged {
     private final List<Store> stores;
     private final UpdateItemNumListener listener;
-    private MutableLiveData<Boolean> isConnected;
+    private LiveData<Boolean> isConnected;
 
-    public StoresAdapter(List<Store> stores, UpdateItemNumListener listener, MutableLiveData<Boolean> isConnected) {
+    public StoresAdapter(List<Store> stores, UpdateItemNumListener listener, LiveData<Boolean> isConnected) {
         this.stores = stores;
         this.listener = listener;
         this.isConnected = isConnected;
