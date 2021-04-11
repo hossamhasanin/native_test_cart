@@ -101,7 +101,7 @@ public class CartViewModel extends ViewModel {
     }
 
     public void deleteCart(){
-        if (!isConnected.getValue()) return;
+        if (!isConnected.getValue() || _viewstate.getValue().getStores().isEmpty()) return;
         dataSource.deleteCart(_viewstate.getValue().getStores());
         _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<>() , null , null , null , null));
     }
