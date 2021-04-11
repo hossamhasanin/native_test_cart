@@ -14,29 +14,35 @@ import java.util.List;
 
 public class FirebaseDataSource implements MainDataSource {
     private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+    private String sellerId;
+
+    public FirebaseDataSource(String sellerId) {
+        this.sellerId = sellerId;
+    }
+
     @Override
     public Task<QuerySnapshot> getAllProducts() {
-        Query query = firestore.collection("carts");
+        Query query = firestore.collection("users").document(sellerId).collection("carts");
         return query.get();
     }
 
     @Override
     public Task<Void> updateProduct(Product product) {
-        DocumentReference query = firestore.collection("carts").document(product.getProductId());
+        DocumentReference query = firestore.collection("users").document(sellerId).collection("carts").document(product.getProductId());
 
         return query.update("productQuantity" , product.getProductQuantity());
     }
 
     @Override
     public Task<Void> removeProduct(Product product) {
-        DocumentReference query = firestore.collection("carts").document(product.getProductId());
+        DocumentReference query = firestore.collection("users").document(sellerId).collection("carts").document(product.getProductId());
 
         return query.delete();
     }
 
     @Override
     public Task<Void> deleteCart(List<Store> stores) {
-        CollectionReference query = firestore.collection("carts");
+        CollectionReference query = firestore.collection("users").document(sellerId).collection("carts");
 
         return firestore.runTransaction(transaction -> {
             List<Product> productList = new ArrayList<>();
@@ -51,7 +57,7 @@ public class FirebaseDataSource implements MainDataSource {
     }
 
     @Override
-    public Task<Void> addProduct(Product product, String sellerId) {
+    public Task<Void> addProduct(Product product) {
         DocumentReference query = firestore.collection("users").document(sellerId).collection("carts").document(product.getProductId());
 
         return query.set(product.toMap());

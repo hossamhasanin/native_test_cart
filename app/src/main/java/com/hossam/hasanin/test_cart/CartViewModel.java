@@ -1,7 +1,5 @@
 package com.hossam.hasanin.test_cart;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -16,7 +14,6 @@ import com.hossam.hasanin.test_cart.datasources.MainDataSource;
 import com.hossam.hasanin.test_cart.models.Product;
 import com.hossam.hasanin.test_cart.models.Store;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +28,7 @@ public class CartViewModel extends ViewModel {
 
 
     public CartViewModel(){
-        dataSource = new FirebaseDataSource();
+        dataSource = new FirebaseDataSource("");
     }
 
     public void getProducts(){
