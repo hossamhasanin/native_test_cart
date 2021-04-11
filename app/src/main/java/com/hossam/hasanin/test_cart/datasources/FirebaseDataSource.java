@@ -51,8 +51,8 @@ public class FirebaseDataSource implements MainDataSource {
     }
 
     @Override
-    public Task<Void> addProduct(Product product) {
-        DocumentReference query = firestore.collection("carts").document(product.getProductId());
+    public Task<Void> addProduct(Product product, String sellerId) {
+        DocumentReference query = firestore.collection("users").document(sellerId).collection("carts").document(product.getProductId());
 
         return query.set(product.toMap());
     }
