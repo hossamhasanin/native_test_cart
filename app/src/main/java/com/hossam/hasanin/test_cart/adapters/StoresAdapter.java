@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.MutableLiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,10 +24,12 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder> implements StorePriceChanged {
     private final List<Store> stores;
     private final UpdateItemNumListener listener;
+    private MutableLiveData<Boolean> isConnected;
 
-    public StoresAdapter(List<Store> stores, UpdateItemNumListener listener) {
+    public StoresAdapter(List<Store> stores, UpdateItemNumListener listener, MutableLiveData<Boolean> isConnected) {
         this.stores = stores;
         this.listener = listener;
+        this.isConnected = isConnected;
     }
 
     @NonNull
@@ -40,7 +43,7 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull StoresAdapter.ViewHolder holder, int position) {
         Store store = stores.get(position);
-        ProductsAdapter productsAdapter = new ProductsAdapter(store.getProducts(), this, position);
+        ProductsAdapter productsAdapter = new ProductsAdapter(store.getProducts(), this, position, isConnected);
         holder.storeName.setText(store.getStoreName());
         Glide.with(holder.itemView.getContext()).load(Uri.parse(store.getStoreImage())).into(holder.storeImage);
         holder.productsRec.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
@@ -57,7 +60,7 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
     private double calcPrice(List<Product> products){
         double price = 0.0;
         for (Product product: products) {
-            price += product.getPrice() * product.getItemCount();
+            price += product.getProductPrice() * product.getProductQuantity();
         }
         return price;
     }
@@ -65,7 +68,7 @@ public class StoresAdapter extends RecyclerView.Adapter<StoresAdapter.ViewHolder
     private int calcItemCount(List<Product> products){
         int items = 0;
         for (Product product: products) {
-            items += product.getItemCount();
+            items += product.getProductQuantity();
         }
         return items;
     }

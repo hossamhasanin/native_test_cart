@@ -1,42 +1,42 @@
 package com.hossam.hasanin.test_cart.models;
 
 public class Product {
-    private String id;
-    private String title;
-    private double price;
+    private String productId;
+    private String productName;
+    private double productPrice;
     private String productImage;
-    private int itemCount;
+    private int productQuantity;
 
-    public Product(String id, String title, double price, String productImage, int itemCount) {
-        this.id = id;
-        this.title = title;
-        this.price = price;
+    public Product(String productId, String productName, double productPrice, String productImage, int productQuantity) {
+        this.productId = productId;
+        this.productName = productName;
+        this.productPrice = productPrice;
         this.productImage = productImage;
-        this.itemCount = itemCount;
+        this.productQuantity = productQuantity;
     }
 
-    public String getId() {
-        return id;
+    public String getProductId() {
+        return productId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
 
-    public String getTitle() {
-        return title;
+    public String getProductName() {
+        return productName;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
-    public double getPrice() {
-        return price;
+    public double getProductPrice() {
+        return productPrice;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
+    public void setProductPrice(double productPrice) {
+        this.productPrice = productPrice;
     }
 
     public String getProductImage() {
@@ -47,11 +47,11 @@ public class Product {
         this.productImage = productImage;
     }
 
-    public int getItemCount() {
-        return itemCount;
+    public int getProductQuantity() {
+        return productQuantity;
     }
 
-    public void setItemCount(int itemCount) {
-        this.itemCount = itemCount;
+    public void setProductQuantity(int productQuantity) {
+        this.productQuantity = productQuantity;
     }
 }

@@ -26,6 +26,7 @@ public class CartViewModel extends ViewModel {
     private MainDataSource dataSource;
     private MutableLiveData<ViewState> _viewstate = new MutableLiveData();
     LiveData<ViewState> viewstate = _viewstate;
+    MutableLiveData<Boolean> isConnected = new MutableLiveData(true);
 
 
 
@@ -34,7 +35,7 @@ public class CartViewModel extends ViewModel {
 
         try{
             Boolean isConnected = isConnected();
-
+            this.isConnected.postValue(isConnected);
             _viewstate.postValue(new ViewState(isConnected , isConnected ? "" : "No internet connection available" , new ArrayList<Store>(), 0, 0));
 
             if (isConnected){
@@ -44,9 +45,10 @@ public class CartViewModel extends ViewModel {
         }catch ( InterruptedException | IOException e){
             Log.e("CartViewModel" , e.getMessage());
         }
+
     }
 
-    private void getProducts(){
+    public void getProducts(){
         dataSource.getAllProducts().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -60,25 +62,24 @@ public class CartViewModel extends ViewModel {
                         double allItemPrice = 0.0;
                         for (DocumentSnapshot snapshot : task.getResult().getDocuments()) {
                             Map<String, Object> map = snapshot.getData();
-                            Product product = new Product((String) map.get("id") , (String) map.get("title"), ((Long) map.get("price")).doubleValue(), (String) map.get("productImage"), ((Long) map.get("itemCount")).intValue());
+                            Product product = new Product((String) map.get("productId") , (String) map.get("productName"), ((Long) map.get("productPrice")).doubleValue(), (String) map.get("productImage"), ((Long) map.get("productQuantity")).intValue());
                             String storeName = (String) map.get("storeName");
+                            String storeId = (String) map.get("storeId");
                             String storeImage = (String) map.get("storeImage");
-                            allItemsCount += product.getItemCount();
-                            allItemPrice += product.getItemCount() * product.getPrice();
-                            if (stores.containsKey(storeName)) {
-                                Store store = stores.get(storeName);
-//                                store.setStoreName(storeName);
-//                                store.setStoreImage(storeImage);
+                            allItemsCount += product.getProductQuantity();
+                            allItemPrice += product.getProductQuantity() * product.getProductPrice();
+                            if (stores.containsKey(storeId)) {
+                                Store store = stores.get(storeId);
                                 store.getProducts().add(product);
-                                store.setTotalItemCount(store.getTotalItemCount() + product.getItemCount());
-                                store.setTotalPrice(store.getTotalPrice() + (product.getPrice() * product.getItemCount()));
+                                store.setTotalItemCount(store.getTotalItemCount() + product.getProductQuantity());
+                                store.setTotalPrice(store.getTotalPrice() + (product.getProductPrice() * product.getProductQuantity()));
                             } else {
                                 List<Product> products = new ArrayList<>();
                                 products.add(product);
-                                int totalItemCount = product.getItemCount();
-                                double totalPrice = product.getItemCount() * product.getPrice();
-                                Store store = new Store(products, storeName, storeImage, totalItemCount, totalPrice);
-                                stores.put(storeName, store);
+                                int totalItemCount = product.getProductQuantity();
+                                double totalPrice = product.getProductQuantity() * product.getProductPrice();
+                                Store store = new Store(storeId, products, storeName, storeImage, totalItemCount, totalPrice);
+                                stores.put(storeId, store);
                             }
                         }
                         List<Store> finishedStores = new ArrayList<>(stores.values());
@@ -97,6 +98,11 @@ public class CartViewModel extends ViewModel {
 
     public void removeProduct(Product product){
         dataSource.removeProduct(product);
+    }
+
+    public void deleteCart(){
+        dataSource.deleteCart(_viewstate.getValue().getStores());
+        _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<>() , null , null , null , null));
     }
 
 

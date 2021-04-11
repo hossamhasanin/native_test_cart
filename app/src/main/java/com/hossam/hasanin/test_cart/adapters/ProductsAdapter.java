@@ -2,7 +2,6 @@ package com.hossam.hasanin.test_cart.adapters;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.MutableLiveData;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -24,14 +24,16 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
     private final List<Product> products;
     private final StorePriceChanged storeChanged;
     private int storePos;
+    private MutableLiveData<Boolean> isConnected;
 
 
 
 
-    public ProductsAdapter(List<Product> products, StorePriceChanged storeChanged, int storePos) {
+    public ProductsAdapter(List<Product> products, StorePriceChanged storeChanged, int storePos, MutableLiveData<Boolean> isConnected) {
         this.products = products;
         this.storeChanged = storeChanged;
         this.storePos = storePos;
+        this.isConnected = isConnected;
     }
 
     @NonNull
@@ -44,17 +46,18 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ProductsAdapter.ViewHolder holder, final int position) {
         Product product = products.get(position);
-        holder.tvProductName.setText(product.getTitle());
-        holder.tvPrice.setText(String.valueOf(product.getPrice()));
-        holder.tvItemCount.setText(String.valueOf(product.getItemCount()));
+        holder.tvProductName.setText(product.getProductName());
+        holder.tvPrice.setText(String.valueOf(product.getProductPrice()));
+        holder.tvItemCount.setText(String.valueOf(product.getProductQuantity()));
         Glide.with(holder.itemView.getContext()).load(Uri.parse(product.getProductImage())).into(holder.imProductImage);
 
         holder.btAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int itemCount = product.getItemCount();
+                if (!isConnected.getValue()) return;
+                int itemCount = product.getProductQuantity();
                 itemCount += 1;
-                product.setItemCount(itemCount);
+                product.setProductQuantity(itemCount);
 
                 storeChanged.priceChanged(storePos , position);
             }
@@ -63,12 +66,13 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
         holder.btRemove.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int itemCount = product.getItemCount();
+                if (!isConnected.getValue()) return;
+                int itemCount = product.getProductQuantity();
                 if (itemCount == 1) {
                     showWantToRemoveDialog(holder.itemView.getContext() , position);
                 } else {
                     itemCount -= 1;
-                    product.setItemCount(itemCount);
+                    product.setProductQuantity(itemCount);
                     storeChanged.priceChanged(storePos , position);
                 }
             }
