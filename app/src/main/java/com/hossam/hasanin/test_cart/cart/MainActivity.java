@@ -1,27 +1,22 @@
-package com.hossam.hasanin.test_cart;
+package com.hossam.hasanin.test_cart.cart;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.hossam.hasanin.test_cart.MainApplication;
+import com.hossam.hasanin.test_cart.R;
 import com.hossam.hasanin.test_cart.adapters.StoresAdapter;
 import com.hossam.hasanin.test_cart.adapters.UpdateItemNumListener;
 import com.hossam.hasanin.test_cart.models.Product;

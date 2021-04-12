@@ -1,4 +1,4 @@
-package com.hossam.hasanin.test_cart;
+package com.hossam.hasanin.test_cart.cart;
 
 import com.hossam.hasanin.test_cart.models.Store;
 

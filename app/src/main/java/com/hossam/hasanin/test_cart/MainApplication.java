@@ -13,7 +13,7 @@ import androidx.lifecycle.MutableLiveData;
 import java.io.IOException;
 
 public class MainApplication extends Application {
-    MutableLiveData<Boolean> isConnected = new MutableLiveData(true);
+    public MutableLiveData<Boolean> isConnected = new MutableLiveData(true);
 
     @Override
     public void onCreate() {

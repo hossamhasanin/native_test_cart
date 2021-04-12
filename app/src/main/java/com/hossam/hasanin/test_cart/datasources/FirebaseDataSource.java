@@ -62,4 +62,10 @@ public class FirebaseDataSource implements MainDataSource {
 
         return query.set(product.toMap());
     }
+
+    @Override
+    public Task<QuerySnapshot> getProduct(String productName) {
+        Query query = firestore.collection("products").whereEqualTo("productName" , productName);
+        return query.get();
+    }
 }

@@ -14,4 +14,6 @@ public interface MainDataSource {
     Task<Void> deleteCart(List<Store> stores);
     Task<Void> addProduct(Product product);
 
+    Task<QuerySnapshot> getProduct(String productName);
+
 }
