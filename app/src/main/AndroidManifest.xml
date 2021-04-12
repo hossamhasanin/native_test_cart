@@ -12,7 +12,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".deep_link_product.DeeoLinkActivity">
-            <tools:validation testUrl="https://www.url.com/product/test-product" />
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -21,8 +20,7 @@
 
                 <data
                     android:scheme="https"
-                    android:host="www.url.com"
-                    android:pathPrefix="/product/" />
+                    android:host="hasanin.page.link"/>
             </intent-filter>
         </activity>
         <activity android:name=".cart.MainActivity">
