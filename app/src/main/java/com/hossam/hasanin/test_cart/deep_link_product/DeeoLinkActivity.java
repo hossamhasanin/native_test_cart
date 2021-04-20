@@ -1,11 +1,8 @@
 package com.hossam.hasanin.test_cart.deep_link_product;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.app.Application;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,15 +11,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
-import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
 import com.hossam.hasanin.test_cart.MainApplication;
 import com.hossam.hasanin.test_cart.R;
-import com.hossam.hasanin.test_cart.cart.CartViewModel;
-import com.hossam.hasanin.test_cart.datasources.MainDataSource;
 import com.hossam.hasanin.test_cart.models.Product;
+
+import java.util.concurrent.Executor;
 
 public class DeeoLinkActivity extends AppCompatActivity {
 
@@ -33,6 +27,8 @@ public class DeeoLinkActivity extends AppCompatActivity {
     ProgressBar barLoading;
     String productQuery;
     MainApplication application;
+
+    private static final String TAG = "DeeoLinkActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +70,25 @@ public class DeeoLinkActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.button).setOnClickListener(view -> {
+            Uri u = viewModel.getLongSharedLink();
+
+            Log.v(TAG , u.toString());
+
+            viewModel.getShortLink().addOnCompleteListener(this, task -> {
+                if (task.isSuccessful()) {
+                    // Short link created
+                    Uri shortLink = task.getResult().getShortLink();
+                    Uri flowchartLink = task.getResult().getPreviewLink();
+
+                    Log.v(TAG , shortLink.toString());
+                    Log.v(TAG , flowchartLink.toString());
+                } else {
+                    task.getException().printStackTrace();
+                }
+            });;
+        });
+
     }
 
     private void showProductData(Product product){
@@ -97,7 +112,7 @@ public class DeeoLinkActivity extends AppCompatActivity {
     }
 
     private void getProduct(){
-        Log.v("koko" , getIntent().getData().toString());
+        Log.v(TAG , getIntent().getData().toString());
 
         if (application.isConnected.getValue()){
             FirebaseDynamicLinks.getInstance()

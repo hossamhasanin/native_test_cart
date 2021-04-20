@@ -1,5 +1,8 @@
 package com.hossam.hasanin.test_cart.datasources;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -10,6 +13,7 @@ import com.hossam.hasanin.test_cart.models.Product;
 import com.hossam.hasanin.test_cart.models.Store;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class FirebaseDataSource implements MainDataSource {
@@ -68,4 +72,6 @@ public class FirebaseDataSource implements MainDataSource {
         Query query = firestore.collection("products").whereEqualTo("productName" , productName);
         return query.get();
     }
+
+
 }
