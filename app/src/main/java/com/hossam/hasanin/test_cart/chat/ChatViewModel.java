@@ -21,8 +21,9 @@ import java.util.List;
 public class ChatViewModel extends ViewModel {
 
     private ChatDataSource dataSource;
-    private MutableLiveData<ChatViewState> _viewstate = new MutableLiveData(new ChatViewState(true , "" , new ArrayList<>()));
+    private MutableLiveData<ChatViewState> _viewstate = new MutableLiveData(new ChatViewState(true , false, false, "" , new ArrayList<>()));
     LiveData<ChatViewState> viewstate = _viewstate;
+    MutableLiveData<Integer> savedScrollPos = new MutableLiveData<>(0);
 
     public void chatListener(Integer otherSellerId){
         dataSource.listenToChat(otherSellerId).addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -34,30 +35,38 @@ public class ChatViewModel extends ViewModel {
 //                    _viewstate.postValue(_viewstate.getValue().copy(null, false, "No messages !"));
 //                }
                 if (!value.isEmpty() && !value.getDocuments().isEmpty()) {
-                    List<Message> messages = new ArrayList<>();
+                    List<MessageWrapper> messages = new ArrayList<>();
                     if (_viewstate.getValue().getMessages().isEmpty()) {
-                        for (DocumentSnapshot snapshot : value.getDocuments()) {
-                            messages.add(Message.fromDocument(snapshot));
+                        for (int j = value.getDocuments().size() - 1; j >= 0; j--) {
+                            DocumentSnapshot snapshot = value.getDocuments().get(j);
+                            messages.add(new MessageWrapper(Message.fromDocument(snapshot) , MessageWrapper.MESSAGE));
                         }
                     } else {
                         messages = _viewstate.getValue().getMessages();
-                        for (DocumentChange change : value.getDocumentChanges()) {
-                            if (messages.get(messages.size() - 1).getMessage()
+                        for (int j = value.getDocumentChanges().size() - 1; j >= 0; j--) {
+                            DocumentChange change = value.getDocumentChanges().get(j);
+                            // check if the created time is different then modify it
+                            if (messages.get(messages.size() - 1).getMessage().getMessage()
                                     .equals(Message.fromDocument(change.getDocument()).getMessage())
-                                    && !messages.get(messages.size() - 1).getCreatedAt()
+                                    && !messages.get(messages.size() - 1).getMessage().getCreatedAt()
                                     .equals(Message.fromDocument(change.getDocument()).getCreatedAt())){
-                                if (!messages.contains(Message.fromDocument(change.getDocument())))
 
-                                    messages.get(messages.size() - 1).setCreatedAt(Message.fromDocument(change.getDocument()).getCreatedAt());
+                                if (messages.contains(new MessageWrapper(Message.fromDocument(change.getDocument()) , MessageWrapper.MESSAGE))) {
+                                    Log.v("koko" , "edit time");
+                                    messages.get(messages.size() - 1).getMessage().setCreatedAt(Message.fromDocument(change.getDocument()).getCreatedAt());
+                                }
                             } else {
-                                if (!messages.contains(Message.fromDocument(change.getDocument())))
-                                    messages.add(Message.fromDocument(change.getDocument()));
+                                if (!messages.contains(new MessageWrapper(Message.fromDocument(change.getDocument()) , MessageWrapper.MESSAGE))) {
+                                    Log.v("koko" , "add to list");
+                                    messages.add(new MessageWrapper(Message.fromDocument(change.getDocument()), MessageWrapper.MESSAGE));
+
+                                }
                             }
                         }
                     }
-                    _viewstate.postValue(_viewstate.getValue().copy(messages, false, ""));
+                    _viewstate.postValue(_viewstate.getValue().copy(messages, false, null , null ,""));
                 } else {
-                    _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<>(), false, "No messages !"));
+                    _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<>(), false, null , null ,"No messages !"));
                 }
             }
         });
@@ -71,6 +80,36 @@ public class ChatViewModel extends ViewModel {
             } else {
                 Log.e("koko" , task.getException().getMessage());
             }
+        });
+    }
+
+    public void loadMore(Integer otherSeller){
+        if (_viewstate.getValue().getNoMore()) return;
+
+        List<MessageWrapper> loadingMoreL = _viewstate.getValue().getMessages();
+        loadingMoreL.add(0 , new MessageWrapper(null , MessageWrapper.LOADING));
+        _viewstate.postValue(_viewstate.getValue().copy(loadingMoreL , null , true , null , null));
+
+        dataSource.getMoreMessages(_viewstate.getValue().getMessages().get(1).getMessage(), otherSeller).addOnCompleteListener(task -> {
+           if (task.isSuccessful()){
+               List<DocumentSnapshot> docs = task.getResult().getDocuments();
+               List<MessageWrapper> messageWrappers = _viewstate.getValue().getMessages();
+               messageWrappers.remove(0);
+               if (!docs.isEmpty()){
+                   for (int j = docs.size() - 1; j >= 0; j--) {
+                       Message messageL = Message.fromDocument(docs.get(j));
+                       messageWrappers.add(0 , new MessageWrapper(messageL , MessageWrapper.MESSAGE));
+                   }
+                   savedScrollPos.postValue(docs.size() - 1);
+                   _viewstate.postValue(_viewstate.getValue().copy(messageWrappers, false, false , null ,""));
+               } else {
+                   _viewstate.getValue().getMessages().remove(0);
+                   _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
+               }
+           } else {
+               _viewstate.getValue().getMessages().remove(0);
+               _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
+           }
         });
     }
 

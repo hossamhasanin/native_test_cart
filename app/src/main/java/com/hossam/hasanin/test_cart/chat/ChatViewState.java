@@ -1,19 +1,19 @@
 package com.hossam.hasanin.test_cart.chat;
 
 
-import com.hossam.hasanin.test_cart.cart.ViewState;
-import com.hossam.hasanin.test_cart.models.Message;
-import com.hossam.hasanin.test_cart.models.Store;
-
 import java.util.List;
 
 public class ChatViewState {
     private Boolean loading;
+    private Boolean loadingMore;
+    private Boolean noMore;
     private String error;
-    private List<Message> messages;
+    private List<MessageWrapper> messages;
 
-    public ChatViewState(Boolean loading, String error, List<Message> messages) {
+    public ChatViewState(Boolean loading, Boolean loadingMore, Boolean noMore, String error, List<MessageWrapper> messages) {
         this.loading = loading;
+        this.loadingMore = loadingMore;
+        this.noMore = noMore;
         this.error = error;
         this.messages = messages;
     }
@@ -34,16 +34,32 @@ public class ChatViewState {
         this.error = error;
     }
 
-    public List<Message> getMessages() {
+    public List<MessageWrapper> getMessages() {
         return messages;
     }
 
-    public void setMessages(List<Message> messages) {
+    public void setMessages(List<MessageWrapper> messages) {
         this.messages = messages;
     }
 
-    ChatViewState copy(List<Message> messages, Boolean loading , String error){
-        List<Message> _messages = this.messages;
+    public Boolean getLoadingMore() {
+        return loadingMore;
+    }
+
+    public void setLoadingMore(Boolean loadingMore) {
+        this.loadingMore = loadingMore;
+    }
+
+    public Boolean getNoMore() {
+        return noMore;
+    }
+
+    public void setNoMore(Boolean noMore) {
+        this.noMore = noMore;
+    }
+
+    ChatViewState copy(List<MessageWrapper> messages, Boolean loading , Boolean loadingMore , Boolean noMore , String error){
+        List<MessageWrapper> _messages = this.messages;
         if (messages != null){
             _messages = messages;
         }
@@ -52,12 +68,22 @@ public class ChatViewState {
             _loading = loading;
         }
 
+        Boolean _loadingMore = this.loadingMore;
+        if (loadingMore != null){
+            _loadingMore = loadingMore;
+        }
+
+        Boolean _noMore = this.noMore;
+        if (noMore != null){
+            _noMore = noMore;
+        }
+
         String _error = this.error;
         if (error != null){
             _error = error;
         }
 
-        return new ChatViewState(_loading , _error , _messages);
+        return new ChatViewState(_loading , _loadingMore, _noMore, _error , _messages);
     }
 
 }

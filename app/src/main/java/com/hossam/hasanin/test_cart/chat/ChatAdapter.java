@@ -19,12 +19,13 @@ import java.util.List;
 public class ChatAdapter extends RecyclerView.Adapter {
     private static final int VIEW_TYPE_MESSAGE_SENT = 1;
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
+    private static final int VIEW_TYPE_LOADING = 3;
 
     private Context mContext;
-    private List<Message> messages;
+    private List<MessageWrapper> messages;
     private UserChat otherUser;
 
-    public ChatAdapter(Context context, List<Message> messageList, UserChat otherUser) {
+    public ChatAdapter(Context context, List<MessageWrapper> messageList, UserChat otherUser) {
         mContext = context;
         messages = messageList;
         this.otherUser = otherUser;
@@ -38,14 +39,23 @@ public class ChatAdapter extends RecyclerView.Adapter {
     // Determines the appropriate ViewType according to the sender of the message.
     @Override
     public int getItemViewType(int position) {
-        Message message = (Message) messages.get(position);
-
-        if (!message.getSenderId().equals(otherUser.getId())) {
-            // If the current user is the sender of the message
-            return VIEW_TYPE_MESSAGE_SENT;
+        Message message = (Message) messages.get(position).getMessage();
+        int type = messages.get(position).getType();
+        if (type == MessageWrapper.MESSAGE) {
+            if (message.getType() == Message.TEXT_MESS) {
+                if (!message.getSenderId().equals(otherUser.getId())) {
+                    // If the current user is the sender of the message
+                    return VIEW_TYPE_MESSAGE_SENT;
+                } else {
+                    // If some other user sent the message
+                    return VIEW_TYPE_MESSAGE_RECEIVED;
+                }
+            } else {
+                // Delete it when you build the rest of view types
+                return VIEW_TYPE_MESSAGE_SENT;
+            }
         } else {
-            // If some other user sent the message
-            return VIEW_TYPE_MESSAGE_RECEIVED;
+            return VIEW_TYPE_LOADING;
         }
     }
 
@@ -62,6 +72,10 @@ public class ChatAdapter extends RecyclerView.Adapter {
             view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_received, parent, false);
             return new ReceivedMessageHolder(view);
+        } else if (viewType == VIEW_TYPE_LOADING){
+            view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.loading_item, parent, false);
+            return new LoadMoreHolder(view);
         }
 
         return null;
@@ -70,7 +84,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
     // Passes the message object to a ViewHolder so that the contents can be bound to UI.
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        Message message = (Message) messages.get(position);
+        Message message = (Message) messages.get(position).getMessage();
 
         switch (holder.getItemViewType()) {
             case VIEW_TYPE_MESSAGE_SENT:
@@ -78,7 +92,15 @@ public class ChatAdapter extends RecyclerView.Adapter {
                 break;
             case VIEW_TYPE_MESSAGE_RECEIVED:
                 ((ReceivedMessageHolder) holder).bind(message , otherUser);
+                break;
+            case VIEW_TYPE_LOADING:
+                break;
         }
+    }
+
+    public void setMessages(List<MessageWrapper> messages) {
+        this.messages = messages;
+        notifyDataSetChanged();
     }
 
     private class SentMessageHolder extends RecyclerView.ViewHolder {
@@ -122,6 +144,14 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
             timeText.setText(ChatAdapter.getTime(message.getCreatedAt()));
             dateText.setText(ChatAdapter.getDate(message.getCreatedAt()));
+        }
+    }
+
+    private class LoadMoreHolder extends RecyclerView.ViewHolder {
+
+        LoadMoreHolder(View itemView) {
+            super(itemView);
+
         }
     }
 
