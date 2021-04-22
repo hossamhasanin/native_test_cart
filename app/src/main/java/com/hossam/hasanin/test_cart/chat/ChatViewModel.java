@@ -96,18 +96,26 @@ public class ChatViewModel extends ViewModel {
                List<MessageWrapper> messageWrappers = _viewstate.getValue().getMessages();
                messageWrappers.remove(0);
                if (!docs.isEmpty()){
-                   for (int j = docs.size() - 1; j >= 0; j--) {
-                       Message messageL = Message.fromDocument(docs.get(j));
-                       messageWrappers.add(0 , new MessageWrapper(messageL , MessageWrapper.MESSAGE));
+                   if (docs.size() == 1 && messageWrappers.contains(new MessageWrapper(Message.fromDocument(docs.get(0)) , MessageWrapper.MESSAGE)))
+                   {
+                       Log.e("koko" , "no more data");
+                       _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
+                   } else {
+                       for (DocumentSnapshot snapshot : docs) {
+                           Message messageL = Message.fromDocument(snapshot);
+                           if (!messageWrappers.contains(new MessageWrapper(Message.fromDocument(snapshot), MessageWrapper.MESSAGE)))
+                               messageWrappers.add(0, new MessageWrapper(messageL, MessageWrapper.MESSAGE));
+                       }
+                       savedScrollPos.postValue(docs.size() - 1);
+                       Log.e("koko", "got data " + docs.size());
+                       _viewstate.postValue(_viewstate.getValue().copy(messageWrappers, false, false, null, ""));
                    }
-                   savedScrollPos.postValue(docs.size() - 1);
-                   _viewstate.postValue(_viewstate.getValue().copy(messageWrappers, false, false , null ,""));
                } else {
-                   _viewstate.getValue().getMessages().remove(0);
+                   Log.e("koko" , "no more data");
                    _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
                }
            } else {
-               _viewstate.getValue().getMessages().remove(0);
+               Log.e("koko" , "no more data");
                _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
            }
         });

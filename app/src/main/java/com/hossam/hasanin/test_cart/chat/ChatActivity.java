@@ -84,8 +84,13 @@ public class ChatActivity extends AppCompatActivity {
                         .findFirstCompletelyVisibleItemPosition();
 
                 adapter.setMessages(viewState.getMessages());
-                Log.v("koko" , "scroll pos "+ pos);
-                messagesRec.scrollToPosition(viewModel.savedScrollPos.getValue());
+
+                if (viewModel.savedScrollPos.getValue() != 0) {
+                    manager.scrollToPositionWithOffset(viewModel.savedScrollPos.getValue(), 80);
+                    Log.v("koko", "scroll pos " + pos);
+                    Log.v("koko", "saved scroll pos " + viewModel.savedScrollPos.getValue());
+                    viewModel.savedScrollPos.postValue(0);
+                }
             } else {
                 messagesRec.setVisibility(View.GONE);
             }
