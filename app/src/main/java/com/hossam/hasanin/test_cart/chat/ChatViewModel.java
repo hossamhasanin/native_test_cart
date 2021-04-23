@@ -24,6 +24,7 @@ public class ChatViewModel extends ViewModel {
     private MutableLiveData<ChatViewState> _viewstate = new MutableLiveData(new ChatViewState(true , false, false, "" , new ArrayList<>()));
     LiveData<ChatViewState> viewstate = _viewstate;
     MutableLiveData<Integer> savedScrollPos = new MutableLiveData<>(0);
+    MutableLiveData<Integer> firstNewMessagePos = new MutableLiveData<>(0);
 
     public void chatListener(Integer otherSellerId){
         dataSource.listenToChat(otherSellerId).addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -43,6 +44,11 @@ public class ChatViewModel extends ViewModel {
                         }
                     } else {
                         messages = _viewstate.getValue().getMessages();
+
+                        if (messages.size() > 5 &&
+                                firstNewMessagePos.getValue() == 0 &&
+                                Message.fromDocument(value.getDocumentChanges().get(0).getDocument()).getSenderId().equals(otherSellerId)) firstNewMessagePos.postValue(messages.size());
+
                         for (int j = value.getDocumentChanges().size() - 1; j >= 0; j--) {
                             DocumentChange change = value.getDocumentChanges().get(j);
                             // check if the created time is different then modify it
@@ -108,6 +114,7 @@ public class ChatViewModel extends ViewModel {
                        }
                        savedScrollPos.postValue(docs.size() - 1);
                        Log.e("koko", "got data " + docs.size());
+                       if (firstNewMessagePos.getValue() != 0) firstNewMessagePos.postValue(firstNewMessagePos.getValue() + docs.size());
                        _viewstate.postValue(_viewstate.getValue().copy(messageWrappers, false, false, null, ""));
                    }
                } else {

@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.hossam.hasanin.test_cart.MainApplication;
 import com.hossam.hasanin.test_cart.R;
 import com.hossam.hasanin.test_cart.cart.CartViewModel;
@@ -31,6 +32,7 @@ public class ChatActivity extends AppCompatActivity {
     private RecyclerView messagesRec;
     private EditText etMessage;
     private Button btnSend;
+    private FloatingActionButton fbGoDown;
     private ProgressBar barLoading;
     private UserChat otherUser;
     private ChatAdapter adapter;
@@ -46,6 +48,7 @@ public class ChatActivity extends AppCompatActivity {
         messagesRec = findViewById(R.id.rec_messages);
         etMessage = findViewById(R.id.et_message);
         btnSend = findViewById(R.id.btn_send);
+        fbGoDown = findViewById(R.id.fbtn_go_down);
         barLoading = findViewById(R.id.bar_loading);
 
         otherUser =  new UserChat(2 , "name");
@@ -106,6 +109,17 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+        viewModel.firstNewMessagePos.observe(this , pos -> {
+            if (pos != 0){
+                Toast.makeText(this , "new message "+ pos , Toast.LENGTH_LONG).show();
+                fbGoDown.setVisibility(View.VISIBLE);
+            } else {
+                Toast.makeText(this , "hide "+ pos , Toast.LENGTH_LONG).show();
+
+                fbGoDown.setVisibility(View.GONE);
+            }
+        });
+
 
         messagesRec.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -113,16 +127,32 @@ public class ChatActivity extends AppCompatActivity {
                 super.onScrolled(recyclerView, dx, dy);
                 int pos = ((LinearLayoutManager) recyclerView.getLayoutManager())
                         .findFirstCompletelyVisibleItemPosition();
-//                int itemCount = recyclerView.getLayoutManager().getChildCount();
+
+                int lastVisAblePos = ((LinearLayoutManager) recyclerView.getLayoutManager())
+                        .findLastCompletelyVisibleItemPosition();
+
+                int itemCount = recyclerView.getLayoutManager().getChildCount();
 //                Log.v("koko" , "scroll pos "+ pos);
 //                Log.v("koko" , "item count "+ itemCount);
-//                Log.v("koko" , "dy "+ dy);
+                Log.v("koko" , "dy "+ dy);
                 if (pos == 0 && pos > dy) {
                     viewModel.loadMore(otherUser.getId());
                     Log.v("koko" , "load more");
                 }
 
+                Log.v("koko" , "scroll lastVisAblePos "+ lastVisAblePos);
+                if (pos > 0 &&
+                    viewModel.firstNewMessagePos.getValue() <= lastVisAblePos &&
+                    viewModel.firstNewMessagePos.getValue() != 0 && dy > 0){
+                    Toast.makeText(getBaseContext() , "got to the new one" , Toast.LENGTH_LONG).show();
+                    viewModel.firstNewMessagePos.postValue(0);
+                }
+
             }
+        });
+
+        fbGoDown.setOnClickListener(view -> {
+            messagesRec.smoothScrollToPosition(viewModel.firstNewMessagePos.getValue());
         });
 
     }
