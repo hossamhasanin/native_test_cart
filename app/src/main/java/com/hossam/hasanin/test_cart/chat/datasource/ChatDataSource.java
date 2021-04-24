@@ -9,7 +9,7 @@ import com.hossam.hasanin.test_cart.models.Message;
 public interface ChatDataSource {
     Query listenToChat(Integer otherSellerId);
 
-    Task<DocumentReference> sendMessage(String message , Integer sendTo);
+    Task<DocumentReference> sendMessage(Message message , Integer sendTo);
 
     Task<QuerySnapshot> getMoreMessages(Message message , Integer otherSellerId);
 

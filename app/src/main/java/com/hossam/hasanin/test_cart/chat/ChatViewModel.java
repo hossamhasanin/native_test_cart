@@ -1,5 +1,6 @@
 package com.hossam.hasanin.test_cart.chat;
 
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -12,11 +13,18 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.hossam.hasanin.test_cart.chat.datasource.ChatDataSource;
 import com.hossam.hasanin.test_cart.models.Message;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ChatViewModel extends ViewModel {
 
@@ -25,6 +33,8 @@ public class ChatViewModel extends ViewModel {
     LiveData<ChatViewState> viewstate = _viewstate;
     MutableLiveData<Integer> savedScrollPos = new MutableLiveData<>(0);
     MutableLiveData<Integer> firstNewMessagePos = new MutableLiveData<>(0);
+    private StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+    private Map<String , Integer> uploadingImPos = new HashMap<>();
 
     public void chatListener(Integer otherSellerId){
         dataSource.listenToChat(otherSellerId).addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -40,7 +50,12 @@ public class ChatViewModel extends ViewModel {
                     if (_viewstate.getValue().getMessages().isEmpty()) {
                         for (int j = value.getDocuments().size() - 1; j >= 0; j--) {
                             DocumentSnapshot snapshot = value.getDocuments().get(j);
-                            messages.add(new MessageWrapper(Message.fromDocument(snapshot) , MessageWrapper.MESSAGE));
+                            Message message = Message.fromDocument(snapshot);
+                            if (message.getType() == Message.PICTURE_MESS){
+                                messages.add(new MessageWrapper(message, MessageWrapper.IMAGE, message.getSenderId().equals(otherSellerId) ? null : UploadingImageState.UPLOAD_DONE));
+                            } else if (message.getType() == Message.TEXT_MESS) {
+                                messages.add(new MessageWrapper(message, MessageWrapper.MESSAGE, null));
+                            }
                         }
                     } else {
                         messages = _viewstate.getValue().getMessages();
@@ -51,21 +66,43 @@ public class ChatViewModel extends ViewModel {
 
                         for (int j = value.getDocumentChanges().size() - 1; j >= 0; j--) {
                             DocumentChange change = value.getDocumentChanges().get(j);
-                            // check if the created time is different then modify it
-                            if (messages.get(messages.size() - 1).getMessage().getMessage()
-                                    .equals(Message.fromDocument(change.getDocument()).getMessage())
-                                    && !messages.get(messages.size() - 1).getMessage().getCreatedAt()
-                                    .equals(Message.fromDocument(change.getDocument()).getCreatedAt())){
+                            Message gotMess = Message.fromDocument(change.getDocument());
 
-                                if (messages.contains(new MessageWrapper(Message.fromDocument(change.getDocument()) , MessageWrapper.MESSAGE))) {
-                                    Log.v("koko" , "edit time");
-                                    messages.get(messages.size() - 1).getMessage().setCreatedAt(Message.fromDocument(change.getDocument()).getCreatedAt());
+                            if (gotMess.getType() == Message.PICTURE_MESS) {
+                                MessageWrapper showedMess;
+                                if (!messages.contains(new MessageWrapper(gotMess, MessageWrapper.IMAGE, null))) {
+                                    if (gotMess.getSenderId().equals(otherSellerId)) {
+                                        showedMess = new MessageWrapper(gotMess, MessageWrapper.IMAGE, null);
+                                        messages.add(showedMess);
+                                    } else {
+                                        if (uploadingImPos.containsKey(gotMess.getMessage())) {
+                                            Integer messPos = uploadingImPos.get(gotMess.getMessage());
+                                            showedMess = messages.get(messPos);
+                                            showedMess.setUploadingImageState(UploadingImageState.UPLOAD_DONE);
+                                            showedMess.setMessage(gotMess);
+                                            messages.set(messPos, showedMess);
+                                            uploadingImPos.remove(messPos);
+                                        }
+                                    }
                                 }
+//                                _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
                             } else {
-                                if (!messages.contains(new MessageWrapper(Message.fromDocument(change.getDocument()) , MessageWrapper.MESSAGE))) {
-                                    Log.v("koko" , "add to list");
-                                    messages.add(new MessageWrapper(Message.fromDocument(change.getDocument()), MessageWrapper.MESSAGE));
+                                // check if the created time is different then modify it
+                                if (messages.get(messages.size() - 1).getMessage().getMessage()
+                                        .equals(gotMess.getMessage())
+                                        && !messages.get(messages.size() - 1).getMessage().getCreatedAt()
+                                        .equals(gotMess.getCreatedAt())) {
 
+                                    if (messages.contains(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null))) {
+                                        Log.v("koko", "edit time");
+                                        messages.get(messages.size() - 1).getMessage().setCreatedAt(Message.fromDocument(change.getDocument()).getCreatedAt());
+                                    }
+                                } else {
+                                    if (!messages.contains(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null))) {
+                                        Log.v("koko", "add to list");
+                                        messages.add(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null));
+
+                                    }
                                 }
                             }
                         }
@@ -78,7 +115,8 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void send(String message , Integer sendTo){
+    public void send(Message message , Integer sendTo){
+
         dataSource.sendMessage(message , sendTo).addOnCompleteListener(task -> {
             if (task.isSuccessful()){
                 Log.v("koko" , "done send");
@@ -93,7 +131,7 @@ public class ChatViewModel extends ViewModel {
         if (_viewstate.getValue().getNoMore()) return;
 
         List<MessageWrapper> loadingMoreL = _viewstate.getValue().getMessages();
-        loadingMoreL.add(0 , new MessageWrapper(null , MessageWrapper.LOADING));
+        loadingMoreL.add(0 , new MessageWrapper(null , MessageWrapper.LOADING, null));
         _viewstate.postValue(_viewstate.getValue().copy(loadingMoreL , null , true , null , null));
 
         dataSource.getMoreMessages(_viewstate.getValue().getMessages().get(1).getMessage(), otherSeller).addOnCompleteListener(task -> {
@@ -102,15 +140,15 @@ public class ChatViewModel extends ViewModel {
                List<MessageWrapper> messageWrappers = _viewstate.getValue().getMessages();
                messageWrappers.remove(0);
                if (!docs.isEmpty()){
-                   if (docs.size() == 1 && messageWrappers.contains(new MessageWrapper(Message.fromDocument(docs.get(0)) , MessageWrapper.MESSAGE)))
+                   if (docs.size() == 1 && messageWrappers.contains(new MessageWrapper(Message.fromDocument(docs.get(0)) , MessageWrapper.MESSAGE, null)))
                    {
                        Log.e("koko" , "no more data");
                        _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
                    } else {
                        for (DocumentSnapshot snapshot : docs) {
                            Message messageL = Message.fromDocument(snapshot);
-                           if (!messageWrappers.contains(new MessageWrapper(Message.fromDocument(snapshot), MessageWrapper.MESSAGE)))
-                               messageWrappers.add(0, new MessageWrapper(messageL, MessageWrapper.MESSAGE));
+                           if (!messageWrappers.contains(new MessageWrapper(Message.fromDocument(snapshot), MessageWrapper.MESSAGE, null)))
+                               messageWrappers.add(0, new MessageWrapper(messageL, MessageWrapper.MESSAGE, null));
                        }
                        savedScrollPos.postValue(docs.size() - 1);
                        Log.e("koko", "got data " + docs.size());
@@ -125,6 +163,39 @@ public class ChatViewModel extends ViewModel {
                Log.e("koko" , "no more data");
                _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
            }
+        });
+    }
+
+    public void uploadImage(byte[] bitmapData , Uri uri , Integer otherUserId , Integer senderId){
+
+        final Integer pos = _viewstate.getValue().getMessages().size();
+
+        _viewstate.getValue().getMessages().add(new MessageWrapper(new Message(senderId , uri.toString() , Message.PICTURE_MESS , new Date().getTime()) , MessageWrapper.IMAGE , UploadingImageState.UPLOADING));
+
+        savedScrollPos.postValue(pos);
+        _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
+
+        String randomName = UUID.randomUUID().toString();
+        StorageReference imagePath = storageReference.child("images").child(randomName + ".jpg");
+        UploadTask uploadTask = imagePath.putBytes(bitmapData);
+
+        uploadTask.addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                imagePath.getDownloadUrl().addOnSuccessListener(imageUri -> {
+                    String url = imageUri.toString();
+
+                    Message message = new Message(null , url , Message.PICTURE_MESS , null);
+
+                    uploadingImPos.put(url , pos);
+
+                    dataSource.sendMessage(message, otherUserId);
+                });
+            } else {
+                MessageWrapper showedMess =  _viewstate.getValue().getMessages().get(pos);
+                showedMess.setUploadingImageState(UploadingImageState.CANCELLED);
+                _viewstate.getValue().getMessages().set(pos , showedMess);
+                _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
+            }
         });
     }
 

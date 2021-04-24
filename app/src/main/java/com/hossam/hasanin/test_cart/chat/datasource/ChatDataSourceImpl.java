@@ -35,16 +35,16 @@ public class ChatDataSourceImpl implements ChatDataSource {
         return query;
     }
 
-    public Task<DocumentReference> sendMessage(String message, Integer sendTo) {
+    public Task<DocumentReference> sendMessage(Message message, Integer sendTo) {
         CollectionReference query = firestore.collection("chats");
 
-        Log.v("koko" , message);
+        Log.v("koko" , message.getMessage());
         Map<String , Object> map = new HashMap<String, Object>(){{
             put("id" , "");
             put("senderId" , sellerId);
             put("users" , Arrays.asList(sellerId.toString() + " " + sendTo.toString(), sendTo.toString() + " " + sellerId.toString()));
-            put("message" , message);
-            put("type" , Message.TEXT_MESS);
+            put("message" , message.getMessage());
+            put("type" , message.getType());
             put("createdAt" , FieldValue.serverTimestamp());
         }};
         return query.add(map).addOnCompleteListener(task -> {

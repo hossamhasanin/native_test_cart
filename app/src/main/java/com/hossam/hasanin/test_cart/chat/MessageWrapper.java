@@ -8,10 +8,13 @@ public class MessageWrapper {
 
     private Message message;
     private int type;
+    private UploadingImageState uploadingImageState;
 
-    public MessageWrapper(Message message, int type) {
+
+    public MessageWrapper(Message message, int type, UploadingImageState uploadingImageState) {
         this.message = message;
         this.type = type;
+        this.uploadingImageState = uploadingImageState;
     }
 
     public Message getMessage() {
@@ -30,6 +33,14 @@ public class MessageWrapper {
         this.type = type;
     }
 
+    public UploadingImageState getUploadingImageState() {
+        return uploadingImageState;
+    }
+
+    public void setUploadingImageState(UploadingImageState uploadingImageState) {
+        this.uploadingImageState = uploadingImageState;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -46,4 +57,9 @@ public class MessageWrapper {
 
     public static final int LOADING = 1;
     public static final int MESSAGE = 2;
+    public static final int IMAGE = 3;
+}
+
+enum UploadingImageState{
+    UPLOADING , UPLOAD_DONE , CANCELLED
 }
