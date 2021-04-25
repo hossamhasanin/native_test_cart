@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
@@ -13,7 +14,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".chat.ChatActivity">
+        <activity android:name=".chat.chats.ChatUsersActivity"></activity>
+        <activity android:name=".chat.messages.ChatActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -32,9 +34,7 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
-        <activity android:name=".cart.MainActivity">
-
-        </activity>
+        <activity android:name=".cart.MainActivity"></activity>
     </application>
 
 </manifest>

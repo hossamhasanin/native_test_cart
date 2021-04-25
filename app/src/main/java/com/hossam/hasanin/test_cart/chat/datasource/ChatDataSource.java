@@ -1,16 +1,27 @@
 package com.hossam.hasanin.test_cart.chat.datasource;
 
+import androidx.lifecycle.MutableLiveData;
+
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.hossam.hasanin.test_cart.models.Message;
+import com.hossam.hasanin.test_cart.models.UserChat;
 
 public interface ChatDataSource {
-    Query listenToChat(Integer otherSellerId);
+    Query listenToChat(Integer sendToId , String chatId);
 
-    Task<DocumentReference> sendMessage(Message message , Integer sendTo);
+    Task<QuerySnapshot> getChats(String lastId);
 
-    Task<QuerySnapshot> getMoreMessages(Message message , Integer otherSellerId);
+    Task<QuerySnapshot> findChatId(Integer sendToId);
+
+    Task<Void> sendMessage(Message message , UserChat sendTo , MutableLiveData<String> chatId);
+
+    Task<QuerySnapshot> getMoreMessages(Message message , String chatId);
+
+    Task<Void> updateUsers(UserChat sendTo  , String chatId);
+
+    Task<Void> deleteChat(String chatId);
+    Task<Void> deleteMessage(String messageId , String chatId);
 
 }

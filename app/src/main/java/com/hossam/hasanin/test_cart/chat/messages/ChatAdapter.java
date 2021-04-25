@@ -1,4 +1,4 @@
-package com.hossam.hasanin.test_cart.chat;
+package com.hossam.hasanin.test_cart.chat.messages;
 
 import android.content.Context;
 import android.net.Uri;
@@ -33,11 +33,13 @@ public class ChatAdapter extends RecyclerView.Adapter {
     private Context mContext;
     private List<MessageWrapper> messages;
     private UserChat otherUser;
+    private DeleteMessageListener listener;
 
-    public ChatAdapter(Context context, List<MessageWrapper> messageList, UserChat otherUser) {
+    public ChatAdapter(Context context, List<MessageWrapper> messageList, UserChat otherUser, DeleteMessageListener listener) {
         mContext = context;
         messages = messageList;
         this.otherUser = otherUser;
+        this.listener = listener;
     }
 
     @Override
@@ -167,6 +169,13 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
             timeText.setText(ChatAdapter.getTime(message.getCreatedAt()));
             dateText.setText(ChatAdapter.getDate(message.getCreatedAt()));
+
+            messageText.setOnLongClickListener(view -> {
+                listener.deleteMessage(message.getId());
+
+                return true;
+            });
+
         }
     }
 
@@ -242,6 +251,11 @@ public class ChatAdapter extends RecyclerView.Adapter {
             } else {
                 tvUploadState.setVisibility(View.GONE);
             }
+
+            sentImage.setOnLongClickListener(view -> {
+                listener.deleteMessage(message.getId());
+                return true;
+            });
         }
     }
 

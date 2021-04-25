@@ -1,4 +1,4 @@
-package com.hossam.hasanin.test_cart.chat;
+package com.hossam.hasanin.test_cart.chat.messages;
 
 import android.net.Uri;
 import android.util.Log;
@@ -18,6 +18,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.hossam.hasanin.test_cart.chat.datasource.ChatDataSource;
 import com.hossam.hasanin.test_cart.models.Message;
+import com.hossam.hasanin.test_cart.models.UserChat;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,9 +36,28 @@ public class ChatViewModel extends ViewModel {
     MutableLiveData<Integer> firstNewMessagePos = new MutableLiveData<>(0);
     private StorageReference storageReference = FirebaseStorage.getInstance().getReference();
     private Map<String , Integer> uploadingImPos = new HashMap<>();
+    MutableLiveData<String> chatId = new MutableLiveData<>(null);
+
+
+    public void findChatId(UserChat sendTo){
+        dataSource.findChatId(sendTo.getId()).addOnCompleteListener(task -> {
+           if (task.isSuccessful()){
+               if (!task.getResult().getDocuments().isEmpty()){
+                   chatId.postValue(task.getResult().getDocuments().get(0).getId());
+                    dataSource.updateUsers(sendTo , chatId.getValue());
+               } else {
+                   chatId.postValue("");
+                   _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<>(), false, null , null ,"No messages !"));
+               }
+           }else {
+               chatId.postValue("");
+               _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<>(), false, null , null ,"Error !"));
+           }
+        });
+    }
 
     public void chatListener(Integer otherSellerId){
-        dataSource.listenToChat(otherSellerId).addSnapshotListener(new EventListener<QuerySnapshot>() {
+        dataSource.listenToChat(otherSellerId , chatId.getValue()).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
 //                if (value != null) {
@@ -115,9 +135,10 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void send(Message message , Integer sendTo){
+    public void send(Message message , UserChat sendTo){
+        if (chatId.getValue() == null) return;
 
-        dataSource.sendMessage(message , sendTo).addOnCompleteListener(task -> {
+        dataSource.sendMessage(message , sendTo, chatId).addOnCompleteListener(task -> {
             if (task.isSuccessful()){
                 Log.v("koko" , "done send");
 
@@ -127,14 +148,14 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void loadMore(Integer otherSeller){
-        if (_viewstate.getValue().getNoMore()) return;
+    public void loadMore(){
+        if (_viewstate.getValue().getNoMore() || chatId.getValue() == null) return;
 
         List<MessageWrapper> loadingMoreL = _viewstate.getValue().getMessages();
         loadingMoreL.add(0 , new MessageWrapper(null , MessageWrapper.LOADING, null));
         _viewstate.postValue(_viewstate.getValue().copy(loadingMoreL , null , true , null , null));
 
-        dataSource.getMoreMessages(_viewstate.getValue().getMessages().get(1).getMessage(), otherSeller).addOnCompleteListener(task -> {
+        dataSource.getMoreMessages(_viewstate.getValue().getMessages().get(1).getMessage() , chatId.getValue()).addOnCompleteListener(task -> {
            if (task.isSuccessful()){
                List<DocumentSnapshot> docs = task.getResult().getDocuments();
                List<MessageWrapper> messageWrappers = _viewstate.getValue().getMessages();
@@ -166,11 +187,12 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void uploadImage(byte[] bitmapData , Uri uri , Integer otherUserId , Integer senderId){
+    public void uploadImage(byte[] bitmapData , Uri uri , UserChat sendTo , UserChat sendFrom){
+        if (chatId.getValue() == null) return;
 
         final Integer pos = _viewstate.getValue().getMessages().size();
 
-        _viewstate.getValue().getMessages().add(new MessageWrapper(new Message(senderId , uri.toString() , Message.PICTURE_MESS , new Date().getTime()) , MessageWrapper.IMAGE , UploadingImageState.UPLOADING));
+        _viewstate.getValue().getMessages().add(new MessageWrapper(new Message(sendFrom.getId() , uri.toString() , Message.PICTURE_MESS , new Date().getTime()) , MessageWrapper.IMAGE , UploadingImageState.UPLOADING));
 
         savedScrollPos.postValue(pos);
         _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
@@ -188,7 +210,7 @@ public class ChatViewModel extends ViewModel {
 
                     uploadingImPos.put(url , pos);
 
-                    dataSource.sendMessage(message, otherUserId);
+                    dataSource.sendMessage(message, sendTo , chatId);
                 });
             } else {
                 MessageWrapper showedMess =  _viewstate.getValue().getMessages().get(pos);
@@ -197,6 +219,10 @@ public class ChatViewModel extends ViewModel {
                 _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
             }
         });
+    }
+
+    public void deleteMessage(String id){
+        dataSource.deleteMessage(id , chatId.getValue());
     }
 
     public void setDataSource(ChatDataSource dataSource) {

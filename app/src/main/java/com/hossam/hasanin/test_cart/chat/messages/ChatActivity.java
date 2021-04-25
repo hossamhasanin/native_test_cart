@@ -1,21 +1,18 @@
-package com.hossam.hasanin.test_cart.chat;
+package com.hossam.hasanin.test_cart.chat.messages;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.ClipData;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -27,20 +24,16 @@ import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.hossam.hasanin.test_cart.MainApplication;
 import com.hossam.hasanin.test_cart.R;
-import com.hossam.hasanin.test_cart.cart.CartViewModel;
 import com.hossam.hasanin.test_cart.chat.datasource.ChatDataSourceImpl;
 import com.hossam.hasanin.test_cart.models.Message;
 import com.hossam.hasanin.test_cart.models.UserChat;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import id.zelory.compressor.Compressor;
-
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements DeleteMessageListener{
 
     private static final int PICK_IMAGE_MULTIPLE = 1;
     private ChatViewModel viewModel;
@@ -50,10 +43,10 @@ public class ChatActivity extends AppCompatActivity {
     private Button btnSend , btnUploadImage;
     private FloatingActionButton fbGoDown;
     private ProgressBar barLoading;
-    private UserChat otherUser;
+    private UserChat sendTo;
     private ChatAdapter adapter;
     private ArrayList<Uri> selectedImagesToSend;
-    public int userId;
+    public UserChat sendFrom;
 
 
     @Override
@@ -69,10 +62,10 @@ public class ChatActivity extends AppCompatActivity {
         fbGoDown = findViewById(R.id.fbtn_go_down);
         barLoading = findViewById(R.id.bar_loading);
 
-        otherUser =  new UserChat(2 , "name");
-        userId = 1;
+        sendTo =  new UserChat(2 , "user 2", "");
+        sendFrom = new UserChat( 1 , "user 1", "");
 
-        adapter = new ChatAdapter(getBaseContext() , new ArrayList<>(), otherUser);
+        adapter = new ChatAdapter(getBaseContext() , new ArrayList<>(), sendTo, this);
         LinearLayoutManager manager = new LinearLayoutManager(getBaseContext());
         messagesRec.setLayoutManager(manager);
         messagesRec.setAdapter(adapter);
@@ -81,9 +74,15 @@ public class ChatActivity extends AppCompatActivity {
 
         MainApplication application = (MainApplication) getApplication();
 
-        viewModel.setDataSource(new ChatDataSourceImpl(userId));
+        viewModel.setDataSource(new ChatDataSourceImpl(sendFrom));
 
-        viewModel.chatListener(otherUser.getId());
+        viewModel.findChatId(sendTo);
+
+        viewModel.chatId.observe(this , chatId -> {
+            if (!chatId.isEmpty()) {
+                viewModel.chatListener(sendTo.getId());
+            }
+        });
 
         viewModel.viewstate.observe(this, viewState -> {
             if (viewState.getLoading()){
@@ -121,8 +120,8 @@ public class ChatActivity extends AppCompatActivity {
 
         btnSend.setOnClickListener(view -> {
             if (application.isConnected.getValue()) {
-                Message message = new Message(userId , etMessage.getText().toString() , Message.TEXT_MESS , null);
-                viewModel.send(message, otherUser.getId());
+                Message message = new Message(sendFrom.getId(), etMessage.getText().toString() , Message.TEXT_MESS , null);
+                viewModel.send(message , sendTo);
                 etMessage.setText("");
             } else {
                 Toast.makeText(getBaseContext() , "You cannot send anything without internet" , Toast.LENGTH_SHORT).show();
@@ -156,7 +155,7 @@ public class ChatActivity extends AppCompatActivity {
 //                Log.v("koko" , "item count "+ itemCount);
                 Log.v("koko" , "dy "+ dy);
                 if (pos == 0 && pos > dy) {
-                    viewModel.loadMore(otherUser.getId());
+                    viewModel.loadMore();
                     Log.v("koko" , "load more");
                 }
 
@@ -206,7 +205,7 @@ public class ChatActivity extends AppCompatActivity {
 
                     byte[] image = compressImage(mImageUri);
 
-                    viewModel.uploadImage(image , mImageUri , otherUser.getId() , userId);
+                    viewModel.uploadImage(image , mImageUri , sendTo , sendFrom);
 
                 } else {
                     if (data.getClipData() != null) {
@@ -217,7 +216,7 @@ public class ChatActivity extends AppCompatActivity {
                             Uri uri = item.getUri();
 
                             byte[] image = compressImage(uri);
-                            viewModel.uploadImage(image , uri , otherUser.getId() , userId);
+                            viewModel.uploadImage(image , uri , sendTo , sendFrom);
                         }
                         Log.v("koko", "Selected Images" + mClipData.getItemCount());
                     }
@@ -247,5 +246,10 @@ public class ChatActivity extends AppCompatActivity {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         t.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         return baos.toByteArray();
+    }
+
+    @Override
+    public void deleteMessage(String id) {
+        viewModel.deleteMessage(id);
     }
 }
