@@ -37,12 +37,13 @@ public class ChatViewModel extends ViewModel {
     private StorageReference storageReference = FirebaseStorage.getInstance().getReference();
     private Map<String , Integer> uploadingImPos = new HashMap<>();
     MutableLiveData<String> chatId = new MutableLiveData<>(null);
-
+    private ArrayList<String> deletedMess = new ArrayList<>();
 
     public void findChatId(UserChat sendTo){
         dataSource.findChatId(sendTo.getId()).addOnCompleteListener(task -> {
            if (task.isSuccessful()){
                if (!task.getResult().getDocuments().isEmpty()){
+                   chatId.setValue(task.getResult().getDocuments().get(0).getId());
                    chatId.postValue(task.getResult().getDocuments().get(0).getId());
                     dataSource.updateUsers(sendTo , chatId.getValue());
                } else {
@@ -88,40 +89,45 @@ public class ChatViewModel extends ViewModel {
                             DocumentChange change = value.getDocumentChanges().get(j);
                             Message gotMess = Message.fromDocument(change.getDocument());
 
-                            if (gotMess.getType() == Message.PICTURE_MESS) {
-                                MessageWrapper showedMess;
-                                if (!messages.contains(new MessageWrapper(gotMess, MessageWrapper.IMAGE, null))) {
-                                    if (gotMess.getSenderId().equals(otherSellerId)) {
-                                        showedMess = new MessageWrapper(gotMess, MessageWrapper.IMAGE, null);
-                                        messages.add(showedMess);
-                                    } else {
-                                        if (uploadingImPos.containsKey(gotMess.getMessage())) {
-                                            Integer messPos = uploadingImPos.get(gotMess.getMessage());
-                                            showedMess = messages.get(messPos);
-                                            showedMess.setUploadingImageState(UploadingImageState.UPLOAD_DONE);
-                                            showedMess.setMessage(gotMess);
-                                            messages.set(messPos, showedMess);
-                                            uploadingImPos.remove(messPos);
+                            if (!deletedMess.contains(gotMess.getId())) {
+
+                                deletedMess.clear();
+
+                                if (gotMess.getType() == Message.PICTURE_MESS) {
+                                    MessageWrapper showedMess;
+                                    if (!messages.contains(new MessageWrapper(gotMess, MessageWrapper.IMAGE, null))) {
+                                        if (gotMess.getSenderId().equals(otherSellerId)) {
+                                            showedMess = new MessageWrapper(gotMess, MessageWrapper.IMAGE, null);
+                                            messages.add(showedMess);
+                                        } else {
+                                            if (uploadingImPos.containsKey(gotMess.getMessage())) {
+                                                Integer messPos = uploadingImPos.get(gotMess.getMessage());
+                                                showedMess = messages.get(messPos);
+                                                showedMess.setUploadingImageState(UploadingImageState.UPLOAD_DONE);
+                                                showedMess.setMessage(gotMess);
+                                                messages.set(messPos, showedMess);
+                                                uploadingImPos.remove(messPos);
+                                            }
                                         }
                                     }
-                                }
 //                                _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
-                            } else {
-                                // check if the created time is different then modify it
-                                if (messages.get(messages.size() - 1).getMessage().getMessage()
-                                        .equals(gotMess.getMessage())
-                                        && !messages.get(messages.size() - 1).getMessage().getCreatedAt()
-                                        .equals(gotMess.getCreatedAt())) {
-
-                                    if (messages.contains(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null))) {
-                                        Log.v("koko", "edit time");
-                                        messages.get(messages.size() - 1).getMessage().setCreatedAt(Message.fromDocument(change.getDocument()).getCreatedAt());
-                                    }
                                 } else {
-                                    if (!messages.contains(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null))) {
-                                        Log.v("koko", "add to list");
-                                        messages.add(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null));
+                                    // check if the created time is different then modify it
+                                    if (messages.get(messages.size() - 1).getMessage().getMessage()
+                                            .equals(gotMess.getMessage())
+                                            && !messages.get(messages.size() - 1).getMessage().getCreatedAt()
+                                            .equals(gotMess.getCreatedAt())) {
 
+                                        if (messages.contains(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null))) {
+                                            Log.v("koko", "edit time");
+                                            messages.get(messages.size() - 1).getMessage().setCreatedAt(Message.fromDocument(change.getDocument()).getCreatedAt());
+                                        }
+                                    } else {
+                                        if (!messages.contains(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null))) {
+                                            Log.v("koko", "add to list");
+                                            messages.add(new MessageWrapper(gotMess, MessageWrapper.MESSAGE, null));
+
+                                        }
                                     }
                                 }
                             }
@@ -156,10 +162,11 @@ public class ChatViewModel extends ViewModel {
         _viewstate.postValue(_viewstate.getValue().copy(loadingMoreL , null , true , null , null));
 
         dataSource.getMoreMessages(_viewstate.getValue().getMessages().get(1).getMessage() , chatId.getValue()).addOnCompleteListener(task -> {
-           if (task.isSuccessful()){
+            List<MessageWrapper> messageWrappers = _viewstate.getValue().getMessages();
+            messageWrappers.remove(0);
+            if (task.isSuccessful()){
                List<DocumentSnapshot> docs = task.getResult().getDocuments();
-               List<MessageWrapper> messageWrappers = _viewstate.getValue().getMessages();
-               messageWrappers.remove(0);
+
                if (!docs.isEmpty()){
                    if (docs.size() == 1 && messageWrappers.contains(new MessageWrapper(Message.fromDocument(docs.get(0)) , MessageWrapper.MESSAGE, null)))
                    {
@@ -178,11 +185,12 @@ public class ChatViewModel extends ViewModel {
                    }
                } else {
                    Log.e("koko" , "no more data");
-                   _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
+                   _viewstate.postValue(_viewstate.getValue().copy(messageWrappers, false, false , true ,""));
                }
            } else {
-               Log.e("koko" , "no more data");
-               _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, false , true ,""));
+               Log.e("koko" , "no more data error");
+               task.getException().printStackTrace();
+               _viewstate.postValue(_viewstate.getValue().copy(new ArrayList<>(), false, false , true ,"Error !"));
            }
         });
     }
@@ -192,7 +200,7 @@ public class ChatViewModel extends ViewModel {
 
         final Integer pos = _viewstate.getValue().getMessages().size();
 
-        _viewstate.getValue().getMessages().add(new MessageWrapper(new Message(sendFrom.getId() , uri.toString() , Message.PICTURE_MESS , new Date().getTime()) , MessageWrapper.IMAGE , UploadingImageState.UPLOADING));
+        _viewstate.getValue().getMessages().add(new MessageWrapper(new Message("" , sendFrom.getId() , uri.toString() , Message.PICTURE_MESS , new Date().getTime()) , MessageWrapper.IMAGE , UploadingImageState.UPLOADING));
 
         savedScrollPos.postValue(pos);
         _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
@@ -206,7 +214,7 @@ public class ChatViewModel extends ViewModel {
                 imagePath.getDownloadUrl().addOnSuccessListener(imageUri -> {
                     String url = imageUri.toString();
 
-                    Message message = new Message(null , url , Message.PICTURE_MESS , null);
+                    Message message = new Message("" ,null , url , Message.PICTURE_MESS , null);
 
                     uploadingImPos.put(url , pos);
 
@@ -221,7 +229,11 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void deleteMessage(String id){
+    public void deleteMessage(String id , int pos){
+        Log.v("koko" , "delete chat id "+ chatId.getValue());
+        _viewstate.getValue().getMessages().remove(pos);
+        _viewstate.postValue(_viewstate.getValue().copy(_viewstate.getValue().getMessages(), false, null , null ,""));
+        deletedMess.add(id);
         dataSource.deleteMessage(id , chatId.getValue());
     }
 

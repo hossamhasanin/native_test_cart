@@ -40,7 +40,7 @@ public class ChatUsersAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         View view;
         if (viewType == ChatUserWrapper.CHAT) {
             view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_message_sent, parent, false);
+                    .inflate(R.layout.chat_user_item, parent, false);
             return new ChatUsersAdapter.UserViewHolder(view);
         } else {
             view = LayoutInflater.from(parent.getContext())

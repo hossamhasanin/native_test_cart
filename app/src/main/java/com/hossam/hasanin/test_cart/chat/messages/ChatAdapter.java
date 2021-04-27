@@ -171,7 +171,7 @@ public class ChatAdapter extends RecyclerView.Adapter {
             dateText.setText(ChatAdapter.getDate(message.getCreatedAt()));
 
             messageText.setOnLongClickListener(view -> {
-                listener.deleteMessage(message.getId());
+                listener.deleteMessage(message.getId() , getAdapterPosition());
 
                 return true;
             });
@@ -253,7 +253,9 @@ public class ChatAdapter extends RecyclerView.Adapter {
             }
 
             sentImage.setOnLongClickListener(view -> {
-                listener.deleteMessage(message.getId());
+                if (uploadState == VIEW_TYPE_DONE_UPLOAD_IMAGE) {
+                    listener.deleteMessage(message.getId() , getAdapterPosition());
+                }
                 return true;
             });
         }

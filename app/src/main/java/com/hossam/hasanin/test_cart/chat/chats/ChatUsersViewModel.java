@@ -36,7 +36,7 @@ public class ChatUsersViewModel extends ViewModel {
                 if (!docs.isEmpty()){
                     Map<String , Object> fUserMap = (Map<String, Object>) docs.get(0).get(user.getId().toString());
                     String fId = (String) docs.get(0).get("id");
-                    UserChat fUserChat = new UserChat((int) fUserMap.get(UserChat.ID) , (String) fUserMap.get(UserChat.NAME) , (String) fUserMap.get(UserChat.IMAGE));
+                    UserChat fUserChat = new UserChat(Long.valueOf((Long) fUserMap.get(UserChat.ID)).intValue() , (String) fUserMap.get(UserChat.NAME) , (String) fUserMap.get(UserChat.IMAGE));
                     ChatUserWrapper fUserWrapper = new ChatUserWrapper(fId, fUserChat , ChatUserWrapper.CHAT);
 
                     if (docs.size() == 1 && userChats.contains(fUserWrapper)) {
@@ -48,7 +48,7 @@ public class ChatUsersViewModel extends ViewModel {
                         for (DocumentSnapshot snapshot : docs) {
                             Map<String, Object> userMap = (Map<String, Object>) snapshot.get(user.getId().toString());
                             String id = (String) snapshot.get("id");
-                            UserChat userChat = new UserChat((int) userMap.get(UserChat.ID), (String) userMap.get(UserChat.NAME), (String) userMap.get(UserChat.IMAGE));
+                            UserChat userChat = new UserChat(Long.valueOf((Long) userMap.get(UserChat.ID)).intValue(), (String) userMap.get(UserChat.NAME), (String) userMap.get(UserChat.IMAGE));
                             ChatUserWrapper wrapper = new ChatUserWrapper(id, userChat, ChatUserWrapper.CHAT);
 
                             userChats.add(wrapper);

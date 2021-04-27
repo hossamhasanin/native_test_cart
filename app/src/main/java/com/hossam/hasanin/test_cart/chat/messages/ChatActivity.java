@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -79,8 +81,11 @@ public class ChatActivity extends AppCompatActivity implements DeleteMessageList
         viewModel.findChatId(sendTo);
 
         viewModel.chatId.observe(this , chatId -> {
-            if (!chatId.isEmpty()) {
-                viewModel.chatListener(sendTo.getId());
+            Log.v("koko" , "activity chat id is "+ chatId);
+            if (chatId != null) {
+                if (!chatId.isEmpty()) {
+                    viewModel.chatListener(sendTo.getId());
+                }
             }
         });
 
@@ -120,7 +125,7 @@ public class ChatActivity extends AppCompatActivity implements DeleteMessageList
 
         btnSend.setOnClickListener(view -> {
             if (application.isConnected.getValue()) {
-                Message message = new Message(sendFrom.getId(), etMessage.getText().toString() , Message.TEXT_MESS , null);
+                Message message = new Message("" , sendFrom.getId(), etMessage.getText().toString() , Message.TEXT_MESS , null);
                 viewModel.send(message , sendTo);
                 etMessage.setText("");
             } else {
@@ -188,6 +193,18 @@ public class ChatActivity extends AppCompatActivity implements DeleteMessageList
         startActivityForResult(Intent.createChooser(intent,"Select Picture"), PICK_IMAGE_MULTIPLE);
     }
 
+    private void showWantToRemoveDialog(Context context , String id , int pos){
+        AlertDialog.Builder dialog = new AlertDialog.Builder(context)
+                .setMessage("Are you sure you want to remove this item ?")
+                .setPositiveButton("Yes", (dialogInterface, i) -> {
+                    viewModel.deleteMessage(id , pos);
+                    dialogInterface.dismiss();
+                }).setNegativeButton("No" , (dialogInterface, i) -> {
+                    dialogInterface.dismiss();
+                });
+        dialog.show();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -249,7 +266,7 @@ public class ChatActivity extends AppCompatActivity implements DeleteMessageList
     }
 
     @Override
-    public void deleteMessage(String id) {
-        viewModel.deleteMessage(id);
+    public void deleteMessage(String id , int pos) {
+        showWantToRemoveDialog(this , id , pos);
     }
 }

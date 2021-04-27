@@ -46,7 +46,7 @@ public class ChatUsersActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(ChatUsersViewModel.class);
 
-        currentUser = new UserChat(1 , "name" , "");
+        currentUser = new UserChat(2 , "name" , "");
 
         viewModel.setDataSource(new ChatDataSourceImpl(currentUser));
 

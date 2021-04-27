@@ -89,9 +89,10 @@ public class ChatDataSourceImpl implements ChatDataSource {
             }};
             return query.document(calcChatId).set(map).addOnCompleteListener(task -> {
                 if (task.isSuccessful()){
-                    chatId.postValue(calcChatId);
+                    chatId.setValue(calcChatId);
 
-                    query.document(chatId.getValue()).collection("messages").document((String) messageMap.get("id")).set(messageMap);
+                    Log.v("koko" , "chat id " + chatId.getValue());
+                    query.document(calcChatId).collection("messages").document((String) messageMap.get("id")).set(messageMap);
                 }
             });
         } else {
@@ -118,11 +119,11 @@ public class ChatDataSourceImpl implements ChatDataSource {
         CollectionReference query = firestore.collection("chats");
 
         Map<String , Object> map = new HashMap<String, Object>(){{
-            put(sendTo.getId().toString() , new HashMap<String , Object>(){{
+            put(sendFrom.getId().toString() , new HashMap<String , Object>(){{
                 put(UserChat.ID , sendTo.getId());
                 put(UserChat.NAME , sendTo.getName());
             }});
-            put(sendFrom.getId().toString() , new HashMap<String , Object>(){{
+            put(sendTo.getId().toString() , new HashMap<String , Object>(){{
                 put(UserChat.ID , sendFrom.getId());
                 put(UserChat.NAME , sendFrom.getName());
             }});
@@ -142,6 +143,8 @@ public class ChatDataSourceImpl implements ChatDataSource {
     public Task<Void> deleteMessage(String messageId, String chatId) {
         CollectionReference query = firestore.collection("chats");
 
+        Log.v("koko" , "delete chat id "+ chatId);
+        Log.v("koko" , "delete message id "+ messageId);
         return query.document(chatId).collection("messages").document(messageId).delete();
     }
 }

@@ -14,7 +14,8 @@ public class Message {
     private int type;
     private Long createdAt;
 
-    public Message(Integer senderId, String message, int type, Long createdAt) {
+    public Message(String id ,Integer senderId, String message, int type, Long createdAt) {
+        this.id = id;
         this.senderId = senderId;
         this.message = message;
         this.type = type;
@@ -64,7 +65,7 @@ public class Message {
 
     public static Message fromDocument(DocumentSnapshot snapshot){
         Map<String , Object> map = snapshot.getData();
-        return new Message(snapshot.getLong("senderId").intValue(), (String) map.get("message") , snapshot.getLong("type").intValue(), map.get("createdAt") != null ? ((Timestamp) map.get("createdAt")).toDate().getTime(): 0);
+        return new Message((String) snapshot.get("id") , snapshot.getLong("senderId").intValue(), (String) map.get("message") , snapshot.getLong("type").intValue(), map.get("createdAt") != null ? ((Timestamp) map.get("createdAt")).toDate().getTime(): 0);
     }
 
     public static final int TEXT_MESS = 0;
