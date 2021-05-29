@@ -37,9 +37,11 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImageViewH
         String image = images.get(position);
 
         if (image == ""){
+            // show image holder
             holder.image.setBackgroundColor(holder.image.getResources().getColor(R.color.colorPrimary));
             holder.image.setImageURI(null);
         } else {
+            // show the picked image uri instead of the holder
             holder.image.setBackgroundColor(holder.image.getResources().getColor(android.R.color.transparent));
             holder.image.setImageURI(Uri.parse(image));
         }
