@@ -16,8 +16,6 @@ import com.hossam.hasanin.test_cart.MainApplication;
 import com.hossam.hasanin.test_cart.R;
 import com.hossam.hasanin.test_cart.models.Product;
 
-import java.util.concurrent.Executor;
-
 public class DeeoLinkActivity extends AppCompatActivity {
 
     DeepLinkViewModel viewModel;
@@ -70,7 +68,7 @@ public class DeeoLinkActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.button).setOnClickListener(view -> {
+        findViewById(R.id.btn_continue).setOnClickListener(view -> {
             Uri u = viewModel.getLongSharedLink();
 
             Log.v(TAG , u.toString());
