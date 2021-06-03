@@ -60,9 +60,9 @@ public class RecTestActivity extends AppCompatActivity implements ImageSliderCli
 
                 productImages.set(currentImageHolder , result.getUri().toString());
 
-                if (currentImageHolder == productImages.size()-1){
-                    productImages.add("");
-                }
+//                if (currentImageHolder == productImages.size()-1){
+//                    productImages.add("");
+//                }
 
                 imagesAdapter.notifyDataSetChanged();
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
