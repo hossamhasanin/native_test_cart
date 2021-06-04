@@ -50,6 +50,12 @@ public class RecTestActivity extends AppCompatActivity implements ImageSliderCli
         crop();
     }
 
+    public void onImageDelete(int position){
+        productImages.set(position , "");
+
+        imagesAdapter.notifyDataSetChanged();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // handle result of CropImageActivity

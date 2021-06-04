@@ -4,11 +4,14 @@ import android.content.Context;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -58,14 +61,33 @@ public class SizesAdapter extends RecyclerView.Adapter<SizesAdapter.MainCategory
                     // ............
                     //DoStuff();
                     //model.setSize_id(list.get(position).getSize_id());
-                    model.setQuantity(Integer.parseInt(holder.etSizeQTY.getText().toString()));
-                    if (listener != null) {
+                    Log.v("koko" , "text "+ holder.etSizeQTY.getText().toString());
+                    String txt = holder.etSizeQTY.getText().toString();
+
+                    if (txt.length() == 0 || txt.equals("0")){
+                        model.setQuantity(0);
+                        holder.tvSize.setChecked(false);
+                    } else {
+                        model.setQuantity(Integer.parseInt(holder.etSizeQTY.getText().toString()));
                         holder.tvSize.setChecked(true);
+                    }
+
+                    if (listener != null) {
                         listener.afterSizeQTYTextChanged(model.getSize_id(), model.getQuantity());
                     }
                 }
             }
         };
+
+        holder.tvSize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean value) {
+                if (!value && model.getQuantity() != 0){
+                    holder.etSizeQTY.setText("");
+                    //Toast.makeText(compoundButton.getContext() , "check " , Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
 
         holder.etSizeQTY.addTextChangedListener(new TextWatcher() {
@@ -85,12 +107,8 @@ public class SizesAdapter extends RecyclerView.Adapter<SizesAdapter.MainCategory
                                                     @Override
                                                     public void afterTextChanged(final Editable s) {
                                                         //avoid triggering event when text is empty
-                                                        if (s.length() > 0) {
-                                                            last_text_edit[0] = System.currentTimeMillis();
-                                                            handler.postDelayed(input_finish_checker, delay);
-                                                        } else {
-
-                                                        }
+                                                        last_text_edit[0] = System.currentTimeMillis();
+                                                        handler.postDelayed(input_finish_checker, delay);
                                                     }
                                                 }
 

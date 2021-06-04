@@ -11,10 +11,16 @@ import android.widget.Toast;
 import com.hossam.hasanin.test_cart.R;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 public class SizesActivity extends AppCompatActivity implements SizesListener {
 
     ArrayList<SizesModel> models;
+
+    List<SizesModel> qtyList = new ArrayList<>();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +45,7 @@ public class SizesActivity extends AppCompatActivity implements SizesListener {
 
         findViewById(R.id.btn_cancel).setOnClickListener(view -> {
             Log.v("koko" , "arr " + models.get(0).getQuantity());
+            Toast.makeText(this , "qtyList size "+qtyList.size() , Toast.LENGTH_LONG).show();
         });
 
     }
@@ -47,18 +54,47 @@ public class SizesActivity extends AppCompatActivity implements SizesListener {
     public void afterSizeQTYTextChanged(Integer id, Integer qty) {
         Toast.makeText(this , "quantity is "+ qty , Toast.LENGTH_LONG).show();
 
-        if (id != null){
-            findItemChangeIt(models , id , qty);
+        if (!contains(qtyList, id, qty)) {
+            if (qty != 0){
+                SizesModel qtyModelClass = new SizesModel(id, qty);
+                qtyList.add(qtyModelClass);
+            }
+            //count= Integer.parseInt (qtyModelClass.getQuantity ());
+            // textView5.setText (count);
+        } else {
+            findItemChangeIt(qtyList, id, qty);
         }
-
 
     }
 
-    private void findItemChangeIt(ArrayList<SizesModel> qtyList , Integer id, Integer qty){
-        for (SizesModel model : qtyList){
-            if (model.getSize_id().equals(id)){
-                model.setQuantity(qty);
-                Log.v("koko" , "change "+id);
+    private boolean contains(List<SizesModel> list, int productId, Integer qty) {
+        int i;
+        for (i = 0; i < list.size(); i++) {
+            if (list.get(i).getSize_id() == (productId) && !list.get(i).getQuantity().equals(qty)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void findItemChangeIt(List<SizesModel> qtyList , Integer id, Integer qty){
+//        for (SizesModel model : qtyList){
+//            if (model.getSize_id().equals(id)){
+//                model.setQuantity(qty);
+//                Log.v("koko" , "change "+id);
+//                break;
+//            }
+//        }
+        ListIterator<SizesModel> iter = qtyList.listIterator();
+        while(iter.hasNext()){
+            SizesModel sizesModel = iter.next();
+            if(sizesModel.getSize_id().equals(id)){
+                if (qty == 0){
+                    iter.remove();
+                } else {
+                    sizesModel.setQuantity(qty);
+                    Log.v("koko" , "change "+id);
+                }
                 break;
             }
         }
