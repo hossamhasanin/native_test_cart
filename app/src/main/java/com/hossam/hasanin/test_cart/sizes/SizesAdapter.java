@@ -85,6 +85,8 @@ public class SizesAdapter extends RecyclerView.Adapter<SizesAdapter.MainCategory
                 if (!value && model.getQuantity() != 0){
                     holder.etSizeQTY.setText("");
                     //Toast.makeText(compoundButton.getContext() , "check " , Toast.LENGTH_LONG).show();
+                } else if (!value){
+                    listener.afterSizeQTYTextChanged(model.getSize_id(), 0);
                 }
             }
         });

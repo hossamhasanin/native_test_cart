@@ -59,8 +59,6 @@ public class SizesActivity extends AppCompatActivity implements SizesListener {
                 SizesModel qtyModelClass = new SizesModel(id, qty);
                 qtyList.add(qtyModelClass);
             }
-            //count= Integer.parseInt (qtyModelClass.getQuantity ());
-            // textView5.setText (count);
         } else {
             findItemChangeIt(qtyList, id, qty);
         }
